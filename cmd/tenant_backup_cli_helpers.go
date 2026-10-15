@@ -14,9 +14,12 @@ import (
 )
 
 func openTenantBackupDB(cfg *config.Config) (*sql.DB, error) {
-	dsn := cfg.Database.PostgresDSN
+	dsn, err := cfg.Database.MigrationDSN()
+	if err != nil {
+		return nil, err
+	}
 	if dsn == "" {
-		return nil, fmt.Errorf("GOCLAW_POSTGRES_DSN not configured")
+		return nil, fmt.Errorf("PostgreSQL is not configured; set GOCLAW_POSTGRES_DSN or DATABASE_URL")
 	}
 
 	db, err := sql.Open("pgx", dsn)

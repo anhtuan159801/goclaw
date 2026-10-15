@@ -386,3 +386,47 @@ systemctl reload nginx
 ```
 
 Unresolved questions: none.
+
+## Koyeb With Neon
+
+This is an alternative server deployment using the repository's root Dockerfile and a Neon PostgreSQL project.
+
+### Neon database
+
+Create a PostgreSQL project in Neon and copy both connection strings from its connection details:
+
+| Environment variable | Neon connection | Use |
+|---|---|---|
+| `DATABASE_URL` | Pooled connection string (`-pooler` hostname) | GoClaw runtime queries and stores |
+| `DATABASE_URL_UNPOOLED` | Direct connection string | Required for Neon schema migrations and startup schema checks; use for database backup/restore |
+
+Set both URLs for Neon. GoClaw's PostgreSQL migration driver takes a session-level advisory lock, so sending migrations through Neon's transaction pooler can break the lock; `DATABASE_URL_UNPOOLED` supplies the direct connection for migrations. GoClaw rejects a `-pooler` URL when no direct URL is configured. The application still falls back to its runtime URL for existing single-DSN deployments using a direct endpoint. The database credentials stay in Koyeb secrets. Do not put either connection string in `config.json`, `.env.example`, or a committed deployment file. Existing deployments can keep using `GOCLAW_POSTGRES_DSN`; it takes precedence over `DATABASE_URL`. `GOCLAW_POSTGRES_DSN_DIRECT` takes precedence over `DATABASE_URL_UNPOOLED`.
+
+GoClaw runs the SQL migrations on container startup through the existing entrypoint. The initial PostgreSQL migration enables `pgcrypto` and `vector`; Neon supports the `pgvector` extension used by GoClaw.
+
+### Koyeb service
+
+1. Create a **Web Service** from the GoClaw Git repository and build it with the root `Dockerfile`.
+2. Configure an HTTP exposed port of `18790` and route `/` to the service. Koyeb supplies that port through `PORT`; leave `GOCLAW_PORT` unset unless you need to override it.
+3. Configure an HTTP health check for `/health` on the exposed port.
+4. Keep the Dockerfile entrypoint and default `serve` command so database upgrades run before the gateway starts.
+5. Add the following as Koyeb secrets/environment variables:
+
+   | Variable | Required | Purpose |
+   |---|---:|---|
+   | `DATABASE_URL` | Yes | Neon pooled runtime connection |
+   | `DATABASE_URL_UNPOOLED` | Yes | Neon direct connection for migrations and maintenance |
+   | `GOCLAW_GATEWAY_TOKEN` | Yes | Gateway authentication token |
+   | `GOCLAW_ENCRYPTION_KEY` | Yes | Encrypt provider credentials stored in PostgreSQL |
+   | `GOCLAW_PROVIDER` / `GOCLAW_MODEL` | Optional | Default provider and model |
+   | `GOCLAW_<PROVIDER>_API_KEY` | Optional | Provider API key when configuring it through environment variables |
+
+The root Dockerfile embeds the Web UI by default and includes PostgreSQL 18 client utilities used by built-in database backup and restore. Set `ENABLE_EMBEDUI=false` only when building a backend-only image. Koyeb's Dockerfile build and port settings are described in [Build from Git](https://www.koyeb.com/docs/build-and-deploy/build-from-git) and [Exposing your Service](https://www.koyeb.com/docs/build-and-deploy/exposing-your-service).
+
+### Persistent and ephemeral data
+
+Memory documents, conversation state, agent context, episodic memory, knowledge graph, vault records, and the other PostgreSQL-backed application data are stored in Neon. Uploaded media, arbitrary workspace files, runtime-installed packages, and skill content still use local filesystem paths; Koyeb container storage does not make those files durable. Persisting those files requires a separate object-storage implementation.
+
+Neon connection pooling uses PgBouncer transaction mode. GoClaw sends normal runtime queries through `DATABASE_URL` and sends migrations and database dump/restore operations through `DATABASE_URL_UNPOOLED`. Existing non-Neon single-DSN deployments retain the application-URL fallback.
+
+A newly created Neon project starts with an empty GoClaw schema. Pointing GoClaw at it does not import records from an existing PostgreSQL or desktop SQLite database; moving existing records requires a separate export/import step.

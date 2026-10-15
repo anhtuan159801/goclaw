@@ -31,17 +31,13 @@ func runOnboard() {
 	cfg := config.Default()
 
 	// Load existing config if present (preserve gateway port, etc.)
-	if _, err := os.Stat(cfgPath); err == nil {
-		if loaded, err := config.Load(cfgPath); err == nil {
-			cfg = loaded
-		}
+	if loaded, err := config.Load(cfgPath); err == nil {
+		cfg = loaded
 	}
 
 	// ── Step 1: Postgres connection ──
-	postgresDSN := os.Getenv("GOCLAW_POSTGRES_DSN")
-	if postgresDSN == "" {
-		postgresDSN = cfg.Database.PostgresDSN
-	}
+	postgresDSN := cfg.Database.PostgresDSN
+	postgresDirectDSN := cfg.Database.PostgresDSNDirect
 	if postgresDSN == "" {
 		fmt.Println("── Database Connection ──")
 		fmt.Println("  Enter your PostgreSQL connection details (press Enter for defaults).")
@@ -55,6 +51,15 @@ func runOnboard() {
 		postgresDSN = dsn
 	} else {
 		fmt.Printf("  Using Postgres DSN from environment\n")
+	}
+
+	migrationDSN, err := (config.DatabaseConfig{
+		PostgresDSN:       postgresDSN,
+		PostgresDSNDirect: postgresDirectDSN,
+	}).MigrationDSN()
+	if err != nil {
+		fmt.Printf("  Invalid migration database URL: %v\n", err)
+		return
 	}
 
 	// ── Step 2: Test connection ──
@@ -88,7 +93,7 @@ func runOnboard() {
 
 	// ── Step 4: Migrations ──
 	fmt.Print("  Running migrations... ")
-	m, err := newMigrator(postgresDSN)
+	m, err := newMigrator(migrationDSN)
 	if err != nil {
 		fmt.Printf("FAILED: %v\n", err)
 		fmt.Println("  You can run it manually later: ./goclaw migrate up")
@@ -119,7 +124,8 @@ func runOnboard() {
 		cfg.Gateway.Port = 18790
 	}
 	cfg.Database.PostgresDSN = "" // secrets go in .env.local, not config
-	cfg.Gateway.Token = ""       // secrets go in .env.local, not config
+	cfg.Database.PostgresDSNDirect = ""
+	cfg.Gateway.Token = "" // secrets go in .env.local, not config
 
 	if err := config.Save(cfgPath, cfg); err != nil {
 		fmt.Printf("  Error saving config: %v\n", err)
@@ -128,7 +134,7 @@ func runOnboard() {
 
 	// ── Step 7: Save .env.local ──
 	envPath := filepath.Join(filepath.Dir(cfgPath), ".env.local")
-	onboardWriteEnvFile(envPath, postgresDSN, gatewayToken, encryptionKey)
+	onboardWriteEnvFile(envPath, postgresDSN, postgresDirectDSN, gatewayToken, encryptionKey)
 
 	// ── Summary ──
 	port := strconv.Itoa(cfg.Gateway.Port)
@@ -157,7 +163,7 @@ func runOnboard() {
 	fmt.Println("── Files ──")
 	fmt.Println()
 	fmt.Printf("  Config:    %s  (gateway host/port, no secrets)\n", cfgPath)
-	fmt.Printf("  Secrets:   %s  (GOCLAW_POSTGRES_DSN, GOCLAW_GATEWAY_TOKEN, GOCLAW_ENCRYPTION_KEY)\n", envPath)
+	fmt.Printf("  Secrets:   %s  (PostgreSQL DSNs, GOCLAW_GATEWAY_TOKEN, GOCLAW_ENCRYPTION_KEY)\n", envPath)
 	fmt.Println()
 
 	fmt.Println("── Next Steps ──")

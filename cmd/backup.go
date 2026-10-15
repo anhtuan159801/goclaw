@@ -33,7 +33,10 @@ func backupCmd() *cobra.Command {
 				return fmt.Errorf("load config: %w", err)
 			}
 
-			dsn := cfg.Database.PostgresDSN
+			dsn, err := cfg.Database.MigrationDSN()
+			if err != nil {
+				return err
+			}
 
 			if outputPath == "" {
 				ts := time.Now().UTC().Format("20060102-150405")
@@ -98,7 +101,7 @@ func backupCmd() *cobra.Command {
 // uploadBackupToS3 loads S3 config from the database and uploads the archive.
 func uploadBackupToS3(ctx context.Context, cfg *config.Config, archivePath, version string) error {
 	if cfg.Database.PostgresDSN == "" {
-		return fmt.Errorf("postgres DSN not configured; set GOCLAW_POSTGRES_DSN")
+		return fmt.Errorf("PostgreSQL is not configured; set GOCLAW_POSTGRES_DSN or DATABASE_URL")
 	}
 	db, err := sql.Open("pgx", cfg.Database.PostgresDSN)
 	if err != nil {

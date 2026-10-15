@@ -47,12 +47,16 @@ func runUpgradeStatus() error {
 
 	fmt.Printf("  App version:     %s%s (protocol %d)\n", Version, commitSuffix(), protocol.ProtocolVersion)
 
-	if cfg.Database.PostgresDSN == "" {
-		fmt.Println("  Database:        NOT CONFIGURED (set GOCLAW_POSTGRES_DSN)")
+	dsn, err := cfg.Database.MigrationDSN()
+	if err != nil {
+		return err
+	}
+	if dsn == "" {
+		fmt.Println("  Database:        NOT CONFIGURED (set GOCLAW_POSTGRES_DSN or DATABASE_URL)")
 		return nil
 	}
 
-	db, err := sql.Open("pgx", cfg.Database.PostgresDSN)
+	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		return fmt.Errorf("connect: %w", err)
 	}
@@ -106,12 +110,14 @@ func runUpgrade(dryRun bool) error {
 		return fmt.Errorf("load config: %w", err)
 	}
 
-	if cfg.Database.PostgresDSN == "" {
-		fmt.Println("Database not configured. Set GOCLAW_POSTGRES_DSN to enable migrations.")
+	dsn, err := cfg.Database.MigrationDSN()
+	if err != nil {
+		return err
+	}
+	if dsn == "" {
+		fmt.Println("Database not configured. Set GOCLAW_POSTGRES_DSN or DATABASE_URL to enable migrations.")
 		return nil
 	}
-
-	dsn := cfg.Database.PostgresDSN
 
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {

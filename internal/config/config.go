@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"maps"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -44,7 +45,7 @@ func (f *FlexibleStringSlice) UnmarshalJSON(data []byte) error {
 // Config is the root configuration for the GoClaw Gateway.
 type Config struct {
 	DataDir   string          `json:"data_dir,omitempty"` // persistent data directory (default: ~/.goclaw/data)
-	Branding  BrandingConfig  `json:"branding,omitempty"`
+	Branding  BrandingConfig  `json:"branding"`
 	Agents    AgentsConfig    `json:"agents"`
 	Channels  ChannelsConfig  `json:"channels"`
 	Providers ProvidersConfig `json:"providers"`
@@ -61,7 +62,7 @@ type Config struct {
 	Bindings  []AgentBinding  `json:"bindings,omitempty"`
 	Hooks     HooksConfig     `json:"hooks"`
 	Packages  PackagesConfig  `json:"packages"` // runtime package mgmt (GitHub updater)
-	Messages  SystemMsgConfig `json:"system_messages,omitempty"`
+	Messages  SystemMsgConfig `json:"system_messages"`
 	mu        sync.RWMutex
 }
 
@@ -141,9 +142,7 @@ func (s SystemMsgConfig) Clone() SystemMsgConfig {
 			continue
 		}
 		cp := make(LocalizedSystemMessage, len(byLocale))
-		for locale, template := range byLocale {
-			cp[locale] = template
-		}
+		maps.Copy(cp, byLocale)
 		out.Messages[key] = cp
 	}
 	return out
@@ -190,10 +189,32 @@ type TailscaleConfig struct {
 // DatabaseConfig configures the database connection and optional Redis cache.
 // DSN fields are NEVER read from config.json (secrets) — only from env vars.
 type DatabaseConfig struct {
-	PostgresDSN    string `json:"-"` // from env GOCLAW_POSTGRES_DSN only
-	RedisDSN       string `json:"-"` // from env GOCLAW_REDIS_DSN only (optional, requires -tags redis)
-	StorageBackend string `json:"-"` // from env GOCLAW_STORAGE_BACKEND only ("postgres" or "sqlite", default "postgres")
-	SQLitePath     string `json:"-"` // from env GOCLAW_SQLITE_PATH only (default: {dataDir}/goclaw.db)
+	PostgresDSN       string `json:"-"` // from GOCLAW_POSTGRES_DSN or DATABASE_URL; application traffic
+	PostgresDSNDirect string `json:"-"` // from GOCLAW_POSTGRES_DSN_DIRECT or DATABASE_URL_UNPOOLED; migrations and maintenance
+	RedisDSN          string `json:"-"` // from env GOCLAW_REDIS_DSN only (optional, requires -tags redis)
+	StorageBackend    string `json:"-"` // from env GOCLAW_STORAGE_BACKEND only ("postgres" or "sqlite", default "postgres")
+	SQLitePath        string `json:"-"` // from env GOCLAW_SQLITE_PATH only (default: {dataDir}/goclaw.db)
+}
+
+// MigrationDSN returns the direct PostgreSQL connection when configured,
+// falling back to a direct application DSN for existing single-DSN deployments.
+// Transaction-pooler URLs require a separate direct DSN for session locks.
+func (c DatabaseConfig) MigrationDSN() (string, error) {
+	if c.PostgresDSNDirect != "" {
+		if usesTransactionPooler(c.PostgresDSNDirect) {
+			return "", fmt.Errorf("direct PostgreSQL DSN points to a transaction pooler; configure a direct URL")
+		}
+		return c.PostgresDSNDirect, nil
+	}
+	if usesTransactionPooler(c.PostgresDSN) {
+		return "", fmt.Errorf("transaction-pooled PostgreSQL URL cannot be used for migrations; set GOCLAW_POSTGRES_DSN_DIRECT or DATABASE_URL_UNPOOLED to a direct URL")
+	}
+	return c.PostgresDSN, nil
+}
+
+func usesTransactionPooler(dsn string) bool {
+	parsed, err := url.Parse(dsn)
+	return err == nil && strings.Contains(strings.ToLower(parsed.Hostname()), "-pooler")
 }
 
 // SkillsConfig configures the skills storage system.

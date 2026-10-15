@@ -2,7 +2,7 @@
 
 # ENABLE_EMBEDUI controls whether the web UI is built and embedded.
 # Must be declared before first FROM to use in stage selector.
-ARG ENABLE_EMBEDUI=false
+ARG ENABLE_EMBEDUI=true
 
 # ── Stage 0: Build Web UI ──
 # BuildKit skips this stage entirely when ENABLE_EMBEDUI=false
@@ -39,7 +39,7 @@ COPY . .
 ARG ENABLE_OTEL=false
 ARG ENABLE_TSNET=false
 ARG ENABLE_REDIS=false
-ARG ENABLE_EMBEDUI=false
+ARG ENABLE_EMBEDUI=true
 ARG VERSION=
 ARG COMMIT_SHA=
 
@@ -92,7 +92,7 @@ COPY docker/requirements-base.txt docker/requirements-skills.txt /tmp/
 # refuse the call and read_document falls back to the provider's 1000-page ceiling.
 # poppler-utils is skipped here when ENABLE_FULL_SKILLS already installs it below.
 RUN set -eux; \
-    apk add --no-cache ca-certificates wget su-exec tzdata; \
+    apk add --no-cache ca-certificates wget su-exec tzdata postgresql18-client; \
     if [ "$ENABLE_MEDIA_PROBES" = "true" ]; then \
         apk add --no-cache ffmpeg; \
         if [ "$ENABLE_FULL_SKILLS" != "true" ]; then \
@@ -176,8 +176,7 @@ ENV GOCLAW_CONFIG=/app/config.json \
     GOCLAW_DATA_DIR=/app/data \
     GOCLAW_SKILLS_DIR=/app/skills \
     GOCLAW_MIGRATIONS_DIR=/app/migrations \
-    GOCLAW_HOST=0.0.0.0 \
-    GOCLAW_PORT=18790
+    GOCLAW_HOST=0.0.0.0
 
 # Entrypoint runs as root to install persisted packages and start pkg-helper,
 # then drops to goclaw user via su-exec before starting the app.
@@ -185,7 +184,7 @@ ENV GOCLAW_CONFIG=/app/config.json \
 EXPOSE 18790
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:18790/health || exit 1
+    CMD sh -c 'port=${GOCLAW_PORT:-${PORT:-18790}}; wget -qO- "http://localhost:${port}/health" || exit 1'
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["serve"]

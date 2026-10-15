@@ -117,7 +117,7 @@ run_as_goclaw() {
 case "${1:-serve}" in
   serve)
     # Auto-upgrade (schema migrations + data hooks) before starting.
-    if [ -n "$GOCLAW_POSTGRES_DSN" ]; then
+    if [ -n "${GOCLAW_POSTGRES_DSN:-${DATABASE_URL:-}}" ]; then
       echo "Running database upgrade..."
       if command -v su-exec >/dev/null 2>&1 && [ "$(id -u)" = "0" ]; then
         su-exec goclaw /app/goclaw upgrade || \

@@ -251,9 +251,10 @@ func (c *Config) applyEnvOverrides() {
 
 	// Gateway host/port
 	envStr("GOCLAW_HOST", &c.Gateway.Host)
-	if v := os.Getenv("GOCLAW_PORT"); v != "" {
-		if port, err := strconv.Atoi(v); err == nil && port > 0 {
+	for _, envName := range []string{"GOCLAW_PORT", "PORT"} {
+		if port, err := strconv.Atoi(os.Getenv(envName)); err == nil && port > 0 {
 			c.Gateway.Port = port
+			break
 		}
 	}
 	if v := os.Getenv("GOCLAW_SKILLS_MAX_UPLOAD_SIZE_MB"); v != "" {
@@ -293,6 +294,13 @@ func (c *Config) applyEnvOverrides() {
 
 	// Database
 	envStr("GOCLAW_POSTGRES_DSN", &c.Database.PostgresDSN)
+	if c.Database.PostgresDSN == "" {
+		envStr("DATABASE_URL", &c.Database.PostgresDSN)
+	}
+	envStr("GOCLAW_POSTGRES_DSN_DIRECT", &c.Database.PostgresDSNDirect)
+	if c.Database.PostgresDSNDirect == "" {
+		envStr("DATABASE_URL_UNPOOLED", &c.Database.PostgresDSNDirect)
+	}
 	envStr("GOCLAW_REDIS_DSN", &c.Database.RedisDSN)
 	envStr("GOCLAW_STORAGE_BACKEND", &c.Database.StorageBackend)
 	envStr("GOCLAW_SQLITE_PATH", &c.Database.SQLitePath)

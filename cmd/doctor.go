@@ -54,7 +54,7 @@ func runDoctor() {
 	if cfg.Database.PostgresDSN == "" {
 		fmt.Println()
 		fmt.Println("  Database:")
-		fmt.Printf("    %-12s NOT CONFIGURED (set GOCLAW_POSTGRES_DSN)\n", "Status:")
+		fmt.Printf("    %-12s NOT CONFIGURED (set GOCLAW_POSTGRES_DSN or DATABASE_URL)\n", "Status:")
 	} else {
 		fmt.Println()
 		fmt.Println("  Database:")

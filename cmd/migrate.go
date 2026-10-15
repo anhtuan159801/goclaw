@@ -66,15 +66,18 @@ func newMigrator(dsn string) (*migrate.Migrate, error) {
 }
 
 func resolveDSN() (string, error) {
-	// DSN comes from environment only (secret, never in config.json).
-	// config.Load also reads GOCLAW_POSTGRES_DSN into cfg.Database.PostgresDSN.
+	// DSNs come from environment only (secrets, never in config.json).
+	// Migrations prefer the direct connection when one is configured.
 	cfg, err := config.Load(resolveConfigPath())
 	if err != nil {
 		return "", fmt.Errorf("load config: %w", err)
 	}
-	dsn := cfg.Database.PostgresDSN
+	dsn, err := cfg.Database.MigrationDSN()
+	if err != nil {
+		return "", err
+	}
 	if dsn == "" {
-		return "", fmt.Errorf("GOCLAW_POSTGRES_DSN environment variable is not set")
+		return "", fmt.Errorf("PostgreSQL is not configured; set GOCLAW_POSTGRES_DSN or DATABASE_URL")
 	}
 	return dsn, nil
 }

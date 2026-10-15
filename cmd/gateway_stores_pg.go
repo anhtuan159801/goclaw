@@ -22,11 +22,16 @@ func setupStoresAndTracing(
 	msgBus *bus.MessageBus,
 ) (*store.Stores, *tracing.Collector, *tracing.SnapshotWorker) {
 	if cfg.Database.PostgresDSN == "" {
-		slog.Error("GOCLAW_POSTGRES_DSN is required. Set it in your environment or .env.local file.")
+		slog.Error("PostgreSQL is not configured. Set GOCLAW_POSTGRES_DSN or DATABASE_URL in your environment.")
 		os.Exit(1)
 	}
 
-	if err := checkSchemaOrAutoUpgrade(cfg.Database.PostgresDSN); err != nil {
+	migrationDSN, err := cfg.Database.MigrationDSN()
+	if err != nil {
+		slog.Error("invalid migration database URL", "error", err)
+		os.Exit(1)
+	}
+	if err := checkSchemaOrAutoUpgrade(migrationDSN); err != nil {
 		slog.Error("schema compatibility check failed", "error", err)
 		os.Exit(1)
 	}

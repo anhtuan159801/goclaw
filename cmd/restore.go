@@ -70,7 +70,10 @@ Use --from-s3 <key> to download and restore from S3.`,
 				return fmt.Errorf("archive not found: %s", archivePath)
 			}
 
-			dsn := cfg.Database.PostgresDSN
+			dsn, err := cfg.Database.MigrationDSN()
+			if err != nil {
+				return err
+			}
 
 			if !dryRun && !force {
 				fmt.Fprintln(os.Stderr, "ERROR: --force flag is required for restore (destructive operation).")
@@ -158,7 +161,7 @@ Use --from-s3 <key> to download and restore from S3.`,
 // loadS3Client opens the DB, reads S3 config from config_secrets, and returns a client.
 func loadS3Client(ctx context.Context, cfg *config.Config) (*backup.S3Client, error) {
 	if cfg.Database.PostgresDSN == "" {
-		return nil, fmt.Errorf("postgres DSN not configured; set GOCLAW_POSTGRES_DSN")
+		return nil, fmt.Errorf("PostgreSQL is not configured; set GOCLAW_POSTGRES_DSN or DATABASE_URL")
 	}
 	db, err := sql.Open("pgx", cfg.Database.PostgresDSN)
 	if err != nil {
