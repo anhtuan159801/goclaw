@@ -50,15 +50,13 @@ func TestPGUsageCapStoreReserveUsageIdempotent(t *testing.T) {
 	var wg sync.WaitGroup
 	errs := make(chan error, 2)
 	for range 2 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			errs <- usageStore.ReconcileUsage(context.Background(), store.UsageReconcileRequest{
 				ReservationKey: req.ReservationKey,
 				ActualTokens:   7,
 				Status:         "reconciled",
 			})
-		}()
+		})
 	}
 	wg.Wait()
 	close(errs)
@@ -90,7 +88,7 @@ func TestPGUsageCapStoreRejectsCrossTenantRefs(t *testing.T) {
 
 	policy := &store.UsageCapPolicy{
 		TenantID: tenantB, AgentID: &agentA, Window: store.UsageCapWindowDay,
-		MaxTokens: int64PtrPG(100), Enabled: true,
+		MaxTokens: new(int64(100)), Enabled: true,
 	}
 	if err := usageStore.CreateUsageCapPolicy(context.Background(), policy); err == nil {
 		t.Fatal("CreateUsageCapPolicy accepted agent_id from another tenant")
@@ -125,7 +123,7 @@ func TestPGUsageCapStoreRejectsCrossTenantRefs(t *testing.T) {
 	})
 	masterScopedPolicy := &store.UsageCapPolicy{
 		TenantID: tenantB, ProviderID: &masterProviderID, Window: store.UsageCapWindowDay,
-		MaxTokens: int64PtrPG(100), Enabled: true,
+		MaxTokens: new(int64(100)), Enabled: true,
 	}
 	if err := usageStore.CreateUsageCapPolicy(context.Background(), masterScopedPolicy); err != nil {
 		t.Fatalf("CreateUsageCapPolicy rejected master provider ref: %v", err)
@@ -215,4 +213,5 @@ func TestPGUsageCapStoreResolvePricingUsesOpenRouterAliases(t *testing.T) {
 	}
 }
 
-func int64PtrPG(v int64) *int64 { return &v }
+//go:fix inline
+func int64PtrPG(v int64) *int64 { return new(v) }

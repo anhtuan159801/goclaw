@@ -50,7 +50,7 @@ func requireMentionConnectorSet() map[string]bool {
 				set[code] = true
 			}
 		} else {
-			for _, code := range strings.Split(raw, ",") {
+			for code := range strings.SplitSeq(raw, ",") {
 				if code = strings.TrimSpace(code); code != "" {
 					set[code] = true
 				}
@@ -73,8 +73,8 @@ func connectorCodeFromEntityID(entityID string) string {
 	if entityID == "" {
 		return ""
 	}
-	if i := strings.IndexByte(entityID, '|'); i >= 0 {
-		return entityID[:i]
+	if before, _, ok := strings.Cut(entityID, "|"); ok {
+		return before
 	}
 	return entityID
 }

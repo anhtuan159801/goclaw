@@ -60,11 +60,11 @@ type promptPreviewSection struct {
 
 // promptPreviewResponse is the API response for system prompt preview.
 type promptPreviewResponse struct {
-	Mode       string                      `json:"mode"`
-	Prompt     string                      `json:"prompt"`
-	TokenCount int                         `json:"token_count"`
-	Sections   []promptPreviewSection      `json:"sections"`
-	Tools      []providers.ToolDefinition  `json:"tools,omitempty"`
+	Mode       string                     `json:"mode"`
+	Prompt     string                     `json:"prompt"`
+	TokenCount int                        `json:"token_count"`
+	Sections   []promptPreviewSection     `json:"sections"`
+	Tools      []providers.ToolDefinition `json:"tools,omitempty"`
 }
 
 // handleSystemPromptPreview renders the actual system prompt for an agent in a given mode.
@@ -126,10 +126,7 @@ func (h *AgentsHandler) handleSystemPromptPreview(w http.ResponseWriter, r *http
 	// Log MCP section presence for debugging
 	mcpStart := strings.Index(result.Prompt, "mcp_")
 	if mcpStart >= 0 {
-		end := mcpStart + 500
-		if end > len(result.Prompt) {
-			end = len(result.Prompt)
-		}
+		end := min(mcpStart+500, len(result.Prompt))
 		slog.Debug("handleSystemPromptPreview.mcp_section_found", "agent_id", ag.ID, "preview", result.Prompt[mcpStart:end])
 	} else {
 		slog.Debug("handleSystemPromptPreview.no_mcp_section", "agent_id", ag.ID, "prompt_len", len(result.Prompt))

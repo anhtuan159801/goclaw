@@ -432,7 +432,6 @@ func TestChildRunAdmissionSerializesConcurrentSynchronousContinuations(t *testin
 	}, func(ctx context.Context, lease *ChildRunLease) {
 		var group sync.WaitGroup
 		for index := range 2 {
-			index := index
 			group.Go(func() {
 				err := lease.Continue(ctx, ChildRunConstraints{
 					TenantID: tenant, RootAgentID: root, RootLimit: 1,

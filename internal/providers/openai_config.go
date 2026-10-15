@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"maps"
 	"net/http"
 	"strings"
 )
@@ -77,9 +78,7 @@ func (p *OpenAIProvider) WithExtraHeaders(h map[string]string) *OpenAIProvider {
 	if p.extraHeaders == nil {
 		p.extraHeaders = make(map[string]string, len(h))
 	}
-	for k, v := range h {
-		p.extraHeaders[k] = v
-	}
+	maps.Copy(p.extraHeaders, h)
 	return p
 }
 
@@ -90,9 +89,7 @@ func (p *OpenAIProvider) ExtraHeaders() map[string]string {
 		return nil
 	}
 	out := make(map[string]string, len(p.extraHeaders))
-	for k, v := range p.extraHeaders {
-		out[k] = v
-	}
+	maps.Copy(out, p.extraHeaders)
 	return out
 }
 

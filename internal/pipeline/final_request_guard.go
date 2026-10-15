@@ -63,10 +63,7 @@ func (s *ThinkStage) finalRequestEstimate(state *RunState, req providers.ChatReq
 	if err != nil {
 		return FinalRequestEstimate{}, err
 	}
-	outputReserve := s.deps.Config.MaxTokens
-	if outputReserve < 0 {
-		outputReserve = 0
-	}
+	outputReserve := max(s.deps.Config.MaxTokens, 0)
 	share := effectiveMaxRequestShare(s.deps.Config.Compaction)
 	inputTokens := messageTokens + toolTokens
 	hardInputCap := contextWindow - outputReserve

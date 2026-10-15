@@ -145,8 +145,7 @@ func TestDispatchOutbound_PreservesPerChatOrder(t *testing.T) {
 	ch := newRecorderChannel("telegram-test")
 	mgr.channels["telegram-test"] = ch
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	go mgr.dispatchOutbound(ctx)
 
 	const n = 50
@@ -185,8 +184,7 @@ func TestDispatchOutbound_SlowChatDoesNotBlockOthers(t *testing.T) {
 	ch.blockOn = slowChat
 	mgr.channels["telegram-test"] = ch
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 	go mgr.dispatchOutbound(ctx)
 
 	// The stuck conversation goes first, exactly as it would when a media
@@ -238,14 +236,12 @@ func TestClaimTempMedia_ExclusiveUnderConcurrency(t *testing.T) {
 	var wg sync.WaitGroup
 	winners := make(chan []string, racers)
 	for range racers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			kept, claimed := mgr.claimTempMedia(media)
 			if len(kept) > 0 {
 				winners <- claimed
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	close(winners)

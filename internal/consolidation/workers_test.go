@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"strings"
 	"sync"
 	"testing"
@@ -329,9 +330,7 @@ func (m *mockSystemConfigStore) List(context.Context) (map[string]string, error)
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	out := make(map[string]string, len(m.data))
-	for k, v := range m.data {
-		out[k] = v
-	}
+	maps.Copy(out, m.data)
 	return out, nil
 }
 

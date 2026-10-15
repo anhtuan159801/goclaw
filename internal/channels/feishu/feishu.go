@@ -456,7 +456,7 @@ func (c *Channel) probeBotInfo(ctx context.Context) error {
 // transient startup failures (network blips, token service warm-up).
 func (c *Channel) probeBotInfoWithRetry(ctx context.Context, attempts int) error {
 	var err error
-	for i := 0; i < attempts; i++ {
+	for i := range attempts {
 		if err = c.probeBotInfo(ctx); err == nil {
 			return nil
 		}

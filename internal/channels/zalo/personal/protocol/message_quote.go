@@ -17,7 +17,7 @@ type TQuote struct {
 	CliMsgType  int             `json:"cliMsgType"`
 	TS          string          `json:"ts"`
 	Msg         string          `json:"msg"`
-	Attach      QuoteAttachment `json:"attach,omitempty"`
+	Attach      QuoteAttachment `json:"attach"`
 	FromD       string          `json:"fromD"`
 	TTL         int             `json:"ttl"`
 }
@@ -30,7 +30,7 @@ func (q *TQuote) UnmarshalJSON(data []byte) error {
 		CliMsgType  json.RawMessage `json:"cliMsgType"`
 		TS          json.RawMessage `json:"ts"`
 		Msg         string          `json:"msg"`
-		Attach      QuoteAttachment `json:"attach,omitempty"`
+		Attach      QuoteAttachment `json:"attach"`
 		FromD       string          `json:"fromD"`
 		TTL         json.RawMessage `json:"ttl"`
 	}

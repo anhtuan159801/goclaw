@@ -2,6 +2,7 @@ package agent
 
 import (
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
@@ -80,9 +81,7 @@ func teamWorkDirectiveNeedsRetry(d *TeamWorkDirective, iteration int, resp *prov
 func buildTeamWorkDirectiveRetryRequest(req providers.ChatRequest, d *TeamWorkDirective) providers.ChatRequest {
 	retry := req
 	retry.Options = make(map[string]any, len(req.Options)+1)
-	for k, v := range req.Options {
-		retry.Options[k] = v
-	}
+	maps.Copy(retry.Options, req.Options)
 	retry.Options[providers.OptToolChoice] = "required"
 	retry.Messages = append(append([]providers.Message{}, req.Messages...), providers.Message{
 		Role:    "system",

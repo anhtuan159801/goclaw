@@ -3364,7 +3364,7 @@ func TestToolStage_Sequential_DefersNonToolMessages(t *testing.T) {
 		t.Fatalf("pending len = %d, want 4", len(pending))
 	}
 	// First 3 must be tool role
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if pending[i].Role != "tool" {
 			t.Errorf("pending[%d].Role = %q, want tool", i, pending[i].Role)
 		}
@@ -3417,7 +3417,7 @@ func TestToolStage_Parallel_DefersNonToolMessages(t *testing.T) {
 	if len(pending) != 4 {
 		t.Fatalf("pending len = %d, want 4", len(pending))
 	}
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		if pending[i].Role != "tool" {
 			t.Errorf("pending[%d].Role = %q, want tool", i, pending[i].Role)
 		}

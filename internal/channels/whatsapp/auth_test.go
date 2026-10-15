@@ -24,7 +24,7 @@ func TestResetClientLockedDoesNotFallbackToFirstDeviceWhenCredentialJIDMissing(t
 	missingJID := types.NewJID("15550000002", types.DefaultUserServer)
 
 	factory := FactoryWithDB(db, nil, "sqlite3")
-	chRaw, err := factory("wa-target", []byte(fmt.Sprintf(`{"device_jid":%q}`, missingJID.String())), nil, bus.New(), nil)
+	chRaw, err := factory("wa-target", fmt.Appendf(nil, `{"device_jid":%q}`, missingJID.String()), nil, bus.New(), nil)
 	if err != nil {
 		t.Fatalf("factory error = %v", err)
 	}

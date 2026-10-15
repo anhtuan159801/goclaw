@@ -137,7 +137,7 @@ func testServerForDownload(t *testing.T, downloadPath string, fileContent []byte
 		// REST API call: imbot.v2.File.download
 		if r.URL.Path == "/rest/imbot.v2.File.download.json" {
 			w.Header().Set("Content-Type", "application/json")
-			result := map[string]interface{}{
+			result := map[string]any{
 				"result": fileDownloadResult{
 					DownloadURL: srv.URL + downloadPath,
 				},
@@ -238,7 +238,7 @@ func TestDownloadEventFiles_MaxInboundFilesCap(t *testing.T) {
 
 	// Create 15 files (exceeds maxInboundFiles=10)
 	var files []EventFile
-	for i := 0; i < 15; i++ {
+	for i := range 15 {
 		files = append(files, EventFile{
 			ID:   fmt.Sprintf("%d", i),
 			Name: fmt.Sprintf("file%d.txt", i),
@@ -264,7 +264,7 @@ func TestDownloadEventFiles_PartialFailure_SKIPPED(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			// First call succeeds, second fails
 			if called == 1 {
-				result := map[string]interface{}{
+				result := map[string]any{
 					"result": fileDownloadResult{
 						DownloadURL: serverRef.URL + "/file1",
 					},
@@ -272,7 +272,7 @@ func TestDownloadEventFiles_PartialFailure_SKIPPED(t *testing.T) {
 				_ = json.NewEncoder(w).Encode(result)
 			} else {
 				// Return error for second file
-				result := map[string]interface{}{
+				result := map[string]any{
 					"error": "INVALID_FILE",
 				}
 				_ = json.NewEncoder(w).Encode(result)
@@ -329,7 +329,7 @@ func TestDownloadEventFiles_HappyPathMultiple_SKIPPED(t *testing.T) {
 			} else {
 				dlURL = serverRef.URL + "/file2"
 			}
-			result := map[string]interface{}{
+			result := map[string]any{
 				"result": fileDownloadResult{DownloadURL: dlURL},
 			}
 			_ = json.NewEncoder(w).Encode(result)

@@ -3,6 +3,7 @@ package providers
 import (
 	"encoding/json"
 	"io"
+	"slices"
 	"testing"
 )
 
@@ -183,13 +184,7 @@ func TestClaudeCLIDisallowedToolsExcludeRemovedReadOnlyTools(t *testing.T) {
 	}
 
 	for _, want := range []string{"NotebookEdit", "TodoWrite"} {
-		found := false
-		for _, got := range blocked {
-			if got == want {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(blocked, want)
 		if !found {
 			t.Fatalf("disallowedCLITools missing still-supported tool %q in %v", want, blocked)
 		}

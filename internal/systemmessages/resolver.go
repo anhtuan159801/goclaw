@@ -3,6 +3,7 @@
 package systemmessages
 
 import (
+	"maps"
 	"strings"
 
 	"github.com/nextlevelbuilder/goclaw/internal/config"
@@ -175,9 +176,7 @@ func Defaults() map[string]Definition {
 
 func copyStringMap(src map[string]string) map[string]string {
 	out := make(map[string]string, len(src))
-	for key, value := range src {
-		out[key] = value
-	}
+	maps.Copy(out, src)
 	return out
 }
 
@@ -231,9 +230,7 @@ func (r *Resolver) locale(locale string) string {
 
 func (r *Resolver) withDefaults(vars Vars) Vars {
 	out := make(Vars, len(vars)+2)
-	for key, value := range vars {
-		out[key] = value
-	}
+	maps.Copy(out, vars)
 	if strings.TrimSpace(out["app_name"]) == "" {
 		out["app_name"] = r.appName()
 	}

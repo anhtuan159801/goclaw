@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/nextlevelbuilder/goclaw/internal/audio"
@@ -350,7 +351,7 @@ func (c *Channel) handleMessageEventFrom(ctx context.Context, event *MessageEven
 
 	// 11. Process media: STT transcription, document extraction, build tags
 	if len(mediaList) > 0 {
-		var extraContent string
+		var extraContent strings.Builder
 		for i := range mediaList {
 			m := &mediaList[i]
 
@@ -382,7 +383,7 @@ func (c *Channel) handleMessageEventFrom(ctx context.Context, event *MessageEven
 					if err != nil {
 						slog.Warn("feishu: document extraction failed", "file", m.FileName, "error", err)
 					} else if docContent != "" {
-						extraContent += "\n\n" + docContent
+						extraContent.WriteString("\n\n" + docContent)
 					}
 				}
 			}
@@ -406,8 +407,8 @@ func (c *Channel) handleMessageEventFrom(ctx context.Context, event *MessageEven
 			}
 		}
 
-		if extraContent != "" {
-			content += extraContent
+		if extraContent.String() != "" {
+			content += extraContent.String()
 		}
 	}
 

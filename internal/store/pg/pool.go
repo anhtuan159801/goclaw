@@ -60,10 +60,7 @@ func OpenDB(dsn string) (*sql.DB, error) {
 	db := stdlib.OpenDB(*config)
 
 	maxOpen := poolEnv("GOCLAW_PG_MAX_OPEN_CONNS", defaultMaxOpenConns)
-	maxIdle := poolEnv("GOCLAW_PG_MAX_IDLE_CONNS", defaultMaxIdleConns)
-	if maxIdle > maxOpen {
-		maxIdle = maxOpen
-	}
+	maxIdle := min(poolEnv("GOCLAW_PG_MAX_IDLE_CONNS", defaultMaxIdleConns), maxOpen)
 	db.SetMaxOpenConns(maxOpen)
 	db.SetMaxIdleConns(maxIdle)
 

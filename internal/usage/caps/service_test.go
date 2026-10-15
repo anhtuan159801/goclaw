@@ -36,7 +36,7 @@ func TestShouldEnforceProvider(t *testing.T) {
 
 func TestPreflightTokenOnlyCapDoesNotRequirePricing(t *testing.T) {
 	providerID := uuid.New()
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: int64Ptr(1000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: new(int64(1000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{policies: []store.UsageCapPolicy{policy}, resolveErr: sql.ErrNoRows}
 	providerStore := &fakeProviderStore{provider: &store.LLMProviderData{
 		BaseModel:    store.BaseModel{ID: providerID},
@@ -75,7 +75,7 @@ func TestPreflightTokenOnlyCapDoesNotRequirePricing(t *testing.T) {
 func TestPreflightIncludesRequestPricingWhenConfigured(t *testing.T) {
 	zero := "0"
 	requestPrice := "0.01"
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxCostMicros: int64Ptr(20_000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxCostMicros: new(int64(20_000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{
 		policies: []store.UsageCapPolicy{policy},
 		resolved: &store.ResolvedUsagePricing{
@@ -108,7 +108,7 @@ func TestPreflightIncludesRequestPricingWhenConfigured(t *testing.T) {
 func TestPreflightFallsBackToMasterProviderMetadata(t *testing.T) {
 	tenantID := uuid.New()
 	masterProviderID := uuid.New()
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: tenantID, MaxTokens: int64Ptr(1000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: tenantID, MaxTokens: new(int64(1000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{policies: []store.UsageCapPolicy{policy}}
 	providerStore := &fakeProviderStore{
 		masterProvider: &store.LLMProviderData{
@@ -138,7 +138,7 @@ func TestPreflightFallsBackToMasterProviderMetadata(t *testing.T) {
 }
 
 func TestReservationReconcileUsesDetachedContext(t *testing.T) {
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: int64Ptr(1000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: new(int64(1000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{policies: []store.UsageCapPolicy{policy}}
 	providerStore := &fakeProviderStore{provider: &store.LLMProviderData{
 		BaseModel:    store.BaseModel{ID: uuid.New()},
@@ -169,7 +169,7 @@ func TestReservationReconcileUsesDetachedContext(t *testing.T) {
 }
 
 func TestReservationReconcileStreamKeepsEstimateAfterPartialError(t *testing.T) {
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: int64Ptr(1000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: new(int64(1000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{policies: []store.UsageCapPolicy{policy}}
 	providerStore := &fakeProviderStore{provider: &store.LLMProviderData{
 		BaseModel:    store.BaseModel{ID: uuid.New()},
@@ -199,7 +199,7 @@ func TestReservationReconcileStreamKeepsEstimateAfterPartialError(t *testing.T) 
 
 func TestReservationReconcileIgnoresUnpricedRequestCount(t *testing.T) {
 	tokenPrice := "0.000001"
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxCostMicros: int64Ptr(1_000_000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxCostMicros: new(int64(1_000_000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{
 		policies: []store.UsageCapPolicy{policy},
 		resolved: &store.ResolvedUsagePricing{
@@ -243,7 +243,7 @@ func TestReservationReconcileIgnoresUnpricedRequestCount(t *testing.T) {
 }
 
 func TestPreflightTraceMetadataForCapExceeded(t *testing.T) {
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: int64Ptr(10), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: new(int64(10)), Enabled: true}
 	usageStore := &fakeUsageCapStore{
 		policies:   []store.UsageCapPolicy{policy},
 		reserveErr: &store.UsageCapExceededError{PolicyID: policy.ID, Reason: "token_cap_exceeded"},
@@ -280,7 +280,7 @@ func TestPreflightTraceMetadataForCapExceeded(t *testing.T) {
 }
 
 func TestPreflightRecordsPricingUnknownBlockEvent(t *testing.T) {
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxCostMicros: int64Ptr(1000), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxCostMicros: new(int64(1000)), Enabled: true}
 	usageStore := &fakeUsageCapStore{
 		policies:   []store.UsageCapPolicy{policy},
 		resolveErr: sql.ErrNoRows,
@@ -321,7 +321,7 @@ func TestPreflightRecordsPricingUnknownBlockEvent(t *testing.T) {
 }
 
 func TestServiceChatBlocksBeforeProviderCall(t *testing.T) {
-	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: int64Ptr(10), Enabled: true}
+	policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: uuid.New(), MaxTokens: new(int64(10)), Enabled: true}
 	usageStore := &fakeUsageCapStore{
 		policies:   []store.UsageCapPolicy{policy},
 		reserveErr: &store.UsageCapExceededError{PolicyID: policy.ID, Reason: "token_cap_exceeded"},
@@ -532,7 +532,8 @@ func (s *fakeProviderStore) UpdateProvider(context.Context, uuid.UUID, map[strin
 }
 func (s *fakeProviderStore) DeleteProvider(context.Context, uuid.UUID) error { return nil }
 
-func int64Ptr(v int64) *int64 { return &v }
+//go:fix inline
+func int64Ptr(v int64) *int64 { return new(v) }
 
 // TestPreflightCountsExtraInputTokens proves an out-of-band media charge reaches
 // the reservation, not just the context-window guard. Without it the reservation
@@ -541,7 +542,7 @@ func TestPreflightCountsExtraInputTokens(t *testing.T) {
 	providerID := uuid.New()
 	tenantID := uuid.New()
 	newService := func() (*Service, *fakeUsageCapStore) {
-		policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: tenantID, MaxTokens: int64Ptr(1_000_000), Enabled: true}
+		policy := store.UsageCapPolicy{ID: uuid.New(), TenantID: tenantID, MaxTokens: new(int64(1_000_000)), Enabled: true}
 		usageStore := &fakeUsageCapStore{policies: []store.UsageCapPolicy{policy}, resolveErr: sql.ErrNoRows}
 		providerStore := &fakeProviderStore{provider: &store.LLMProviderData{
 			BaseModel:    store.BaseModel{ID: providerID},
@@ -583,7 +584,7 @@ func TestPreflightDeniesWhenMediaChargeExceedsTokenCap(t *testing.T) {
 	tenantID := uuid.New()
 	policyID := uuid.New()
 	newService := func() *Service {
-		policy := store.UsageCapPolicy{ID: policyID, TenantID: tenantID, MaxTokens: int64Ptr(1_000), Enabled: true}
+		policy := store.UsageCapPolicy{ID: policyID, TenantID: tenantID, MaxTokens: new(int64(1_000)), Enabled: true}
 		usageStore := &fakeUsageCapStore{
 			policies:         []store.UsageCapPolicy{policy},
 			resolveErr:       sql.ErrNoRows,

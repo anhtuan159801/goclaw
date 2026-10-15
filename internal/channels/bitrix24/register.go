@@ -253,7 +253,7 @@ const maxBotListPages = 40
 // (no hasNextPage field) are treated as a single page and stop after one call.
 func (c *Channel) forEachBotPage(ctx context.Context, client *Client, scan func(*RawResult) bool) (bool, error) {
 	offset := 0
-	for page := 0; page < maxBotListPages; page++ {
+	for range maxBotListPages {
 		resp, err := client.Call(ctx, "imbot.v2.Bot.list", map[string]any{
 			"limit":  botListPageLimit,
 			"offset": offset,

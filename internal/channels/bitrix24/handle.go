@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"regexp"
 	"strconv"
 	"strings"
@@ -349,9 +350,7 @@ func (c *Channel) handleMessage(ctx context.Context, evt *Event) {
 	// and CHAT_TYPE. Only non-empty keys are emitted so DMs / plain groups
 	// pay no cost. See entity_context.go for parser semantics.
 	if ec, ok := ParseEntityContext(&evt.Params); ok {
-		for k, v := range ec.ToMeta(&evt.Params) {
-			meta[k] = v
-		}
+		maps.Copy(meta, ec.ToMeta(&evt.Params))
 	}
 
 	// Collect contact for processed messages (matches Telegram pattern at

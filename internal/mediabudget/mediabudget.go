@@ -428,10 +428,7 @@ func materialize(p Payload) (path string, cleanup func(), err error) {
 const maxMaterializeBytes = 4 << 30 // 4 GiB, above any payload this system streams
 
 func writePayload(f *os.File, p Payload) error {
-	size := p.Size
-	if size > maxMaterializeBytes {
-		size = maxMaterializeBytes
-	}
+	size := min(p.Size, maxMaterializeBytes)
 	if err := f.Truncate(size); err != nil {
 		return err
 	}

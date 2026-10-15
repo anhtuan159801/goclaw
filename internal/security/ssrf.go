@@ -156,7 +156,7 @@ var operatorAllowlistRejected []string
 // entries that are malformed or that overlap a never-allowlistable range.
 // Returns the accepted nets and a human-readable reason per rejected entry.
 func parseOperatorAllowedCIDRs(spec string) (nets []*net.IPNet, rejected []string) {
-	for _, raw := range strings.Split(spec, ",") {
+	for raw := range strings.SplitSeq(spec, ",") {
 		entry := strings.TrimSpace(raw)
 		if entry == "" {
 			continue

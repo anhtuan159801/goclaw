@@ -415,7 +415,7 @@ func (s *Service) runMessages(ctx context.Context, inst *store.ChannelInstanceDa
 		MessageCount:      len(consumed),
 		RedactionCount:    redacted.Count,
 		RedactionTypes:    redactionTypes,
-		StartedAt:         timePtr(time.Now().UTC()),
+		StartedAt:         new(time.Now().UTC()),
 	}
 	if err := s.Extractions.CreateRun(ctx, run); err != nil {
 		return nil, err

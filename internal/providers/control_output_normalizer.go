@@ -146,10 +146,7 @@ func controlPrefixSuffixLen(text string) int {
 		} else {
 			candidate = lower
 		}
-		limit := len(token) - 1
-		if len(candidate) < limit {
-			limit = len(candidate)
-		}
+		limit := min(len(candidate), len(token)-1)
 		for n := limit; n > maxKeep; n-- {
 			if strings.HasPrefix(token, candidate[len(candidate)-n:]) {
 				maxKeep = n
@@ -337,7 +334,7 @@ func textToolCallID(rawHeader string, index int) string {
 	if strings.HasPrefix(header, "call_") {
 		return header
 	}
-	sum := sha256.Sum256([]byte(fmt.Sprintf("%s:%d", header, index)))
+	sum := sha256.Sum256(fmt.Appendf(nil, "%s:%d", header, index))
 	return "call_" + hex.EncodeToString(sum[:])[:16]
 }
 

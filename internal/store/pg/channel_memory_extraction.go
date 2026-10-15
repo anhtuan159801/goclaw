@@ -167,10 +167,7 @@ func (s *PGChannelMemoryExtractionStore) ListItems(ctx context.Context, opts sto
 	if limit <= 0 || limit > 200 {
 		limit = 50
 	}
-	offset := opts.Offset
-	if offset < 0 {
-		offset = 0
-	}
+	offset := max(opts.Offset, 0)
 	limitArg, offsetArg := next, next+1
 	args = append(args, limit, offset)
 	rows, err := s.db.QueryContext(ctx, `SELECT `+channelMemoryItemCols+`

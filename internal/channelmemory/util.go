@@ -90,7 +90,8 @@ func mergeTopicLabels(groups ...[]string) []string {
 }
 
 //go:fix inline
-func timePtr(t time.Time) *time.Time { return &t }
+//go:fix inline
+func timePtr(t time.Time) *time.Time { return new(t) }
 
 func contains(values []string, v string) bool {
 	return slices.Contains(values, v)

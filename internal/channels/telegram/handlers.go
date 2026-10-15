@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 
@@ -794,10 +795,8 @@ func telegramToolAllowWithManager(toolAllow []string, permissions []string) []st
 	if len(toolAllow) == 0 || len(permissions) == 0 {
 		return toolAllow
 	}
-	for _, name := range toolAllow {
-		if name == "telegram_manager" {
-			return toolAllow
-		}
+	if slices.Contains(toolAllow, "telegram_manager") {
+		return toolAllow
 	}
 	merged := append([]string{}, toolAllow...)
 	return append(merged, "telegram_manager")
