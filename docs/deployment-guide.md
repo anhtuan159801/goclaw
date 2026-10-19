@@ -469,6 +469,8 @@ Agnes AI exposes an OpenAI-compatible API with streaming and tool calling. Add i
 
 Agnes AI does not document an embeddings endpoint, so semantic memory and knowledge-graph embeddings stay disabled unless a separate embeddings provider is configured. Without embeddings, memory features that need vectors are degraded, not broken.
 
+Video generation works through the same provider via the builtin `create_video` tool: GoClaw calls Agnes's async `/v1/videos` API (not the chat model — Agnes rejects `modalities: ["video"]` on `/chat/completions`). The default model is `agnes-video-2.5-flash` (limited-time free promo, fixed `720P` output); the paid `agnes-video-2.5` model bills per second ($0.025/s at 720P). Provider ordering and per-provider params (e.g. `size`) are configured under Builtin Tools → `create_video` chain.
+
 ### Persistent and ephemeral data
 
 Memory documents, conversation state, agent context, episodic memory, knowledge graph, vault records, and the other PostgreSQL-backed application data are stored in Neon. Uploaded media, arbitrary workspace files, runtime-installed packages, and skill content still use local filesystem paths; Koyeb container storage does not make those files durable. Persisting those files requires a separate object-storage implementation.

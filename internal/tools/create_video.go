@@ -15,7 +15,7 @@ import (
 )
 
 // videoGenProviderPriority is the default order for video generation providers.
-var videoGenProviderPriority = []string{"gemini", "minimax", "openrouter", "byteplus"}
+var videoGenProviderPriority = []string{"gemini", "minimax", "openrouter", "byteplus", "agnes"}
 
 // videoGenModelDefaults maps provider names to default video generation models.
 var videoGenModelDefaults = map[string]string{
@@ -23,6 +23,7 @@ var videoGenModelDefaults = map[string]string{
 	"minimax":    "MiniMax-Hailuo-2.3",
 	"openrouter": "google/veo-3.1-lite-generate-preview",
 	"byteplus":   "seedance-1-5-pro",
+	"agnes":      "agnes-video-2.5-flash",
 }
 
 // maxImageToVideoBytes is the maximum image file size for image-to-video (20 MB).
@@ -219,6 +220,12 @@ func (t *CreateVideoTool) callProvider(ctx context.Context, cp credentialProvide
 
 	slog.Info("create_video: calling video generation API",
 		"provider", providerName, "model", model, "duration", duration, "aspect_ratio", aspectRatio)
+
+	// Agnes exposes an async /v1/videos API, not chat-completions video modality —
+	// route it before the generic openai_compat fallback.
+	if isAgnesVideoProvider(providerName, cp.APIBase()) {
+		return t.callAgnesVideoGen(ctx, cp.APIKey(), cp.APIBase(), model, prompt, duration, aspectRatio, params)
+	}
 
 	switch GetParamString(params, "_provider_type", providerTypeFromName(providerName)) {
 	case "gemini":

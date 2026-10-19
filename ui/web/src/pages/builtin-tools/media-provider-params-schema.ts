@@ -119,6 +119,20 @@ export const MEDIA_PARAMS_SCHEMA: Record<string, Record<string, ParamField[]>> =
         ],
       },
     ],
+    openai_compat: [
+      {
+        key: "size",
+        label: "Size",
+        type: "select",
+        default: "720P",
+        options: [
+          { value: "720P", label: "720P" },
+          { value: "1080P", label: "1080P" },
+          { value: "1K", label: "1K" },
+          { value: "2K", label: "2K" },
+        ],
+      },
+    ],
   },
   create_audio: {
     minimax_native: [
