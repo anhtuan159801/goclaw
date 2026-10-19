@@ -1,0 +1,1 @@
+{"file": ".trellis/tasks/10-19-agnes-video-provider/research/agnes-video-api.md", "reason": "Verify implementation against grounded Agnes video API contract (endpoints, response fields, Flash 720P constraint, no-auth download of result URL)"}
