@@ -423,7 +423,7 @@ GoClaw runs the SQL migrations on container startup through the existing entrypo
 
 The root Dockerfile embeds the Web UI by default and includes PostgreSQL 18 client utilities used by built-in database backup and restore. Set `ENABLE_EMBEDUI=false` only when building a backend-only image. Koyeb's Dockerfile build and port settings are described in [Build from Git](https://www.koyeb.com/docs/build-and-deploy/build-from-git) and [Exposing your Service](https://www.koyeb.com/docs/build-and-deploy/exposing-your-service).
 
-### Koyeb Free (CPU Eco) instance
+### Koyeb Free instance
 
 Koyeb's Free instance is a Web Service with **0.1 vCPU, 512 MB RAM, and 2 GB SSD**. Important limits:
 
@@ -455,6 +455,7 @@ Add these environment variables/secrets in addition to the required secrets abov
 | `GOMAXPROCS` | `1` | Avoids scheduler/GC threads sized for host CPUs under a 0.1 vCPU quota |
 | `GOCLAW_PG_MAX_OPEN_CONNS` | `5` | Smaller Neon pool for a single tiny instance |
 | `GOCLAW_PG_MAX_IDLE_CONNS` | `2` | Fewer idle DB connections |
+| `GOCLAW_ALLOWED_ORIGINS` | `https://<service>.koyeb.app` | Restricts WebSocket CORS to the service origin; without it the gateway logs `security.cors_open` and accepts all origins |
 
 Leave `GOCLAW_PORT` unset so Koyeb's injected `PORT` selects the listener, and set the health check grace period high enough for the cold start plus startup migrations; 300 seconds is ample.
 
