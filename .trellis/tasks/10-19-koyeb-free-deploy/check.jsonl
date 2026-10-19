@@ -1,0 +1,1 @@
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Verify the Koyeb deployment honors the DSN precedence, migration-direct-URL rule, and port resolution contract"}

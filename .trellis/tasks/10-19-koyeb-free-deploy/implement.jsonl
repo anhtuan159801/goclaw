@@ -1,0 +1,2 @@
+{"file": ".trellis/spec/backend/database-guidelines.md", "reason": "Neon pooled/direct DSN contract, Koyeb PORT precedence, and Docker image constraints that the deployment work must preserve"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Deployment spans Dockerfile, docs, env contract, runtime config, and external platform settings"}
