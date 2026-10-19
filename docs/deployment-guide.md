@@ -423,6 +423,51 @@ GoClaw runs the SQL migrations on container startup through the existing entrypo
 
 The root Dockerfile embeds the Web UI by default and includes PostgreSQL 18 client utilities used by built-in database backup and restore. Set `ENABLE_EMBEDUI=false` only when building a backend-only image. Koyeb's Dockerfile build and port settings are described in [Build from Git](https://www.koyeb.com/docs/build-and-deploy/build-from-git) and [Exposing your Service](https://www.koyeb.com/docs/build-and-deploy/exposing-your-service).
 
+### Koyeb Free (CPU Eco) instance
+
+Koyeb's Free instance is a Web Service with **0.1 vCPU, 512 MB RAM, and 2 GB SSD**. Important limits:
+
+- One Free instance per organization; Web Services only.
+- Region must be **Washington, D.C.** or **Frankfurt**. Choose Washington, D.C. when the Neon project is in `aws-us-east-2` (Ohio) to keep database latency low.
+- No custom scaling, no Volumes, and no persistent container storage.
+- The instance **scales down to zero after 1 hour without traffic**. The next request triggers a cold start (image boot, schema check, gateway start) and takes noticeably longer than a warm request; WebSocket clients must reconnect. Scheduled cron/heartbeat work does not run while the instance is asleep.
+- Koyeb documents Free instances as unsuitable for production. Use them for demos, testing, and personal use.
+
+Service settings for the Free instance:
+
+| Setting | Value |
+|---|---|
+| Service type | Web Service |
+| Repository / branch | fork or upstream, branch that contains this guide (e.g. `dev`) |
+| Builder | Dockerfile (repository root) |
+| Instance type | Free |
+| Region | Washington, D.C. |
+| Port | `18790` (HTTP) |
+| Health check | HTTP `GET /health`, grace period `300` seconds (Koyeb allows 5–900) |
+| Restart limit | default |
+| Scaling | not configurable on Free |
+
+Add these environment variables/secrets in addition to the required secrets above. They keep the Go runtime and database pool inside the 512 MB / 0.1 vCPU budget:
+
+| Variable | Recommended value | Purpose |
+|---|---|---|
+| `GOMEMLIMIT` | `400MiB` | Bounds the Go heap below the 512 MB instance cap |
+| `GOMAXPROCS` | `1` | Avoids scheduler/GC threads sized for host CPUs under a 0.1 vCPU quota |
+| `GOCLAW_PG_MAX_OPEN_CONNS` | `5` | Smaller Neon pool for a single tiny instance |
+| `GOCLAW_PG_MAX_IDLE_CONNS` | `2` | Fewer idle DB connections |
+
+Leave `GOCLAW_PORT` unset so Koyeb's injected `PORT` selects the listener, and set the health check grace period high enough for the cold start plus startup migrations; 300 seconds is ample.
+
+### Agnes AI provider (OpenAI-compatible)
+
+Agnes AI exposes an OpenAI-compatible API with streaming and tool calling. Add it in the web dashboard after the service is healthy:
+
+1. Open the service URL and sign in with `GOCLAW_GATEWAY_TOKEN`.
+2. Providers → Add provider (or the setup wizard): type **OpenAI Compatible** (`openai_compat`), API base `https://apihub.agnes-ai.com/v1`, API key from the Agnes console, and model `agnes-2.5-flash`.
+3. Optionally set it as the default provider/model so new agents use it automatically. Provider credentials are stored encrypted using `GOCLAW_ENCRYPTION_KEY`; keep the API key out of tracked files.
+
+Agnes AI does not document an embeddings endpoint, so semantic memory and knowledge-graph embeddings stay disabled unless a separate embeddings provider is configured. Without embeddings, memory features that need vectors are degraded, not broken.
+
 ### Persistent and ephemeral data
 
 Memory documents, conversation state, agent context, episodic memory, knowledge graph, vault records, and the other PostgreSQL-backed application data are stored in Neon. Uploaded media, arbitrary workspace files, runtime-installed packages, and skill content still use local filesystem paths; Koyeb container storage does not make those files durable. Persisting those files requires a separate object-storage implementation.

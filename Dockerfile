@@ -183,7 +183,7 @@ ENV GOCLAW_CONFIG=/app/config.json \
 
 EXPOSE 18790
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
     CMD sh -c 'port=${GOCLAW_PORT:-${PORT:-18790}}; wget -qO- "http://localhost:${port}/health" || exit 1'
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
